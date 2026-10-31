@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mr. Rocha’s English Class: Prepare 5 Activity 3</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js for Results -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { transition: background-color 0.3s, color 0.3s; }
+        .shiny-blue {
+            border: 2px solid #3b82f6 !important;
+            box-shadow: 0 0 10px #3b82f6, 0 0 20px rgba(59, 130, 246, 0.5) !important;
+            outline: none !important;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        .shiny-blue:focus {
+            box-shadow: 0 0 15px #60a5fa, 0 0 30px rgba(96, 165, 250, 0.8) !important;
+        }
+        
+        /* Puzzle Grid Styles */
+        .puzzle-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            gap: 2px;
+            width: 100%;
+            max-width: 600px;
+            aspect-ratio: 4/3;
+            background-color: #333;
+            border: 2px solid #3b82f6;
+            margin: 0 auto;
+        }
+        .puzzle-piece {
+            width: 100%;
+            height: 100%;
+            background-size: 500% 400%; /* 5 cols, 4 rows */
+            cursor: pointer;
+            box-sizing: border-box;
+            transition: transform 0.2s;
+        }
+        .puzzle-piece.selected {
+            border: 3px solid #facc15;
+            transform: scale(0.95);
+            z-index: 10;
+        }
+        .puzzle-slot {
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        /* Sentence Builder Styles */
+        .word-tile {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            margin: 0.25rem;
+            background-color: #3b82f6;
+            color: white;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            user-select: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.1s, background-color 0.2s;
+        }
+        .word-tile:active { transform: translateY(2px); }
+        .word-tile:hover { background-color: #2563eb; }
+        .sentence-drop-zone {
+            min-height: 3rem;
+            border: 2px dashed #9ca3af;
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+        .sentence-drop-zone.shiny-blue { border-style: solid; }
+
+        /* General UI states */
+        .correct-bg { background-color: rgba(34, 197, 94, 0.2) !important; border-color: #22c55e !important; box-shadow: none !important;}
+        .incorrect-bg { background-color: rgba(239, 68, 68, 0.2) !important; border-color: #ef4444 !important; box-shadow: none !important;}
+        
+        .feedback-icon { margin-left: 10px; font-size: 1.2rem; }
+        .text-correct { color: #22c55e; }
+        .text-incorrect { color: #ef4444; }
+
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white; color: black; }
+            .section-container { display: block !important; margin-bottom: 2rem; page-break-inside: avoid; }
+            #results-section { page-break-before: always; }
+            .shiny-blue { box-shadow: none !important; border-color: #ccc !important; }
+            canvas { max-width: 100% !important; height: auto !important; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100 font-sans min-h-screen flex flex-col transition-colors duration-300">
+
+    <!-- Header Navigation -->
+    <header class="sticky top-0 z-50 bg-white dark:bg-gray-800 shadow-md no-print">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+            <h1 class="text-xl md:text-2xl font-bold text-blue-600 dark:text-blue-400">Mr. Rocha’s English Class</h1>
+            <div class="flex items-center gap-4">
+                <button onclick="toggleTheme()" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition" aria-label="Toggle Theme">
+                    <i class="fas fa-moon dark:hidden text-gray-600"></i>
+                    <i class="fas fa-sun hidden dark:inline text-yellow-400"></i>
+                </button>
+                <button onclick="showResultsForce()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition shadow-lg">
+                    <i class="fas fa-chart-pie mr-2"></i>Results
+                </button>
+            </div>
+        </div>
+        <!-- Progress Bar -->
+        <div class="w-full bg-gray-200 dark:bg-gray-700 h-2">
+            <div id="progress-bar" class="bg-blue-500 h-2 transition-all duration-500" style="width: 0%;"></div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow max-w-6xl mx-auto w-full px-4 py-8">
+        
+        <!-- Intro Section -->
+        <div id="section-0" class="section-container active space-y-6">
+            <h2 class="text-3xl font-bold text-center mb-8">Prepare 5 Activity 3</h2>
+            
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Student Name</label>
+                        <input type="text" id="student-name" class="w-full p-3 bg-transparent shiny-blue text-lg" placeholder="Type your full name here...">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Date</label>
+                        <input type="date" id="student-date" class="w-full p-3 bg-transparent shiny-blue text-lg">
+                    </div>
+                </div>
+                
+                <div class="mt-8 text-center">
+                    <p class="mb-4 text-lg">Welcome to Activity 3! Please proceed through the activities. Good luck!</p>
+                    <img src="Image1.jpg" onerror="this.onerror=null; this.src='https://placehold.co/800x400/2563eb/ffffff?text=Image+1+(Intro)';" class="max-w-full mx-auto rounded-xl shadow-md border-4 border-white dark:border-gray-700" alt="Introduction Image">
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity 1 -->
+        <div id="section-1" class="section-container hidden space-y-6">
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold mb-4 border-b pb-2 dark:border-gray-700"><span class="text-blue-500">Activity 1:</span> Watch and Tell</h2>
+                <p class="mb-4 text-lg">Watch the video. Tell Mr. Rocha about the video.</p>
+                
+                <div class="aspect-video w-full mb-6 bg-black rounded-lg overflow-hidden flex items-center justify-center relative">
+                    <video controls class="w-full h-full object-cover" id="video1" onerror="handleMediaError(this, 'Video 1')">
+                        <source src="Video1.mp4" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                    <div id="video1-fallback" class="absolute inset-0 flex items-center justify-center bg-gray-800 text-white flex-col hidden z-10">
+                        <i class="fas fa-video-slash text-4xl mb-2"></i>
+                        <span>Video1.mp4 not found</span>
+                    </div>
+                </div>
+
+                <label class="block font-semibold mb-2">Your Answer:</label>
+                <textarea id="act1-ans" rows="4" class="w-full p-4 bg-transparent shiny-blue rounded-lg resize-none" placeholder="Write what the video was about..."></textarea>
+                
+                <div class="mt-4 flex justify-end">
+                    <button onclick="checkOpenEnded('act1')" id="btn-act1" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition shadow-md">
+                        Check Answer
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity 2 -->
+        <div id="section-2" class="section-container hidden space-y-6">
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold mb-4 border-b pb-2 dark:border-gray-700"><span class="text-blue-500">Activity 2:</span> Read and Tell</h2>
+                <p class="mb-4 text-lg">Read the story and tell Mr. Rocha what it was about.</p>
+                
+                <img src="Image2.jpg" onerror="this.onerror=null; this.src='https://placehold.co/800x600/3b82f6/ffffff?text=Image+2+(Story)';" class="w-full rounded-xl shadow-md mb-6" alt="Story Image">
+
+                <label class="block font-semibold mb-2">Your Answer:</label>
+                <textarea id="act2-ans" rows="4" class="w-full p-4 bg-transparent shiny-blue rounded-lg resize-none" placeholder="Write what the story was about..."></textarea>
+                
+                <div class="mt-4 flex justify-end">
+                    <button onclick="checkOpenEnded('act2')" id="btn-act2" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition shadow-md">
+                        Check Answer
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity 3 -->
+        <div id="section-3" class="section-container hidden space-y-6">
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold mb-4 border-b pb-2 dark:border-gray-700"><span class="text-blue-500">Activity 3:</span> Answer the Questions</h2>
+                
+                <div class="space-y-6">
+                    <div class="question-block">
+                        <p class="font-semibold text-lg mb-2">1. It’s good to go shopping when you know exactly what you want and where to find it.</p>
+                        <textarea id="act3-q1" rows="2" class="w-full p-3 bg-transparent shiny-blue rounded-lg resize-none" placeholder="Your answer..."></textarea>
+                    </div>
+                    <div class="question-block">
+                        <p class="font-semibold text-lg mb-2">2. It’s better to shop in a department store or supermarket where you can find everything in one shop.</p>
+                        <textarea id="act3-q2" rows="2" class="w-full p-3 bg-transparent shiny-blue rounded-lg resize-none" placeholder="Your answer..."></textarea>
+                    </div>
+                    <div class="question-block">
+                        <p class="font-semibold text-lg mb-2">3. Markets usually sell poor quality goods which is why they are cheaper.</p>
+                        <textarea id="act3-q3" rows="2" class="w-full p-3 bg-transparent shiny-blue rounded-lg resize-none" placeholder="Your answer..."></textarea>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex justify-end">
+                    <button onclick="checkOpenEnded('act3')" id="btn-act3" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition shadow-md">
+                        Check Answers
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity 4 -->
+        <div id="section-4" class="section-container hidden space-y-6">
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold mb-4 border-b pb-2 dark:border-gray-700"><span class="text-blue-500">Activity 4:</span> Watch and Answer</h2>
+                <p class="mb-4 text-lg">Watch the video and answer the questions.</p>
+                
+                <div class="aspect-video w-full mb-6 bg-black rounded-lg overflow-hidden flex items-center justify-center relative">
+                    <video controls class="w-full h-full object-cover" id="video2" onerror="handleMediaError(this, 'Video 1')">
+                        <source src="Video1.mp4" type="video/mp4">
+                    </video>
+                    <div id="video2-fallback" class="absolute inset-0 flex items-center justify-center bg-gray-800 text-white flex-col hidden z-10">
+                        <i class="fas fa-video-slash text-4xl mb-2"></i>
+                        <span>Video1.mp4 not found</span>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="question-block relative">
+                        <p class="font-semibold text-lg mb-2">1. How many different shopping areas does the speaker mention?</p>
+                        <input type="text" id="act4-q1" class="w-full p-3 bg-transparent shiny-blue rounded-lg" placeholder="e.g., 7 or 8">
+                        <span id="act4-q1-icon" class="absolute right-4 top-12"></span>
+                    </div>
+                    <div class="question-block relative">
+                        <p class="font-semibold text-lg mb-2">2. Can you name them? (Name at least 2)</p>
+                        <textarea id="act4-q2" rows="3" class="w-full p-3 bg-transparent shiny-blue rounded-lg resize-none" placeholder="e.g., Oxford Street, Covent Garden..."></textarea>
+                        <span id="act4-q2-icon" class="absolute right-4 top-12"></span>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex justify-end">
+                    <button onclick="checkAct4()" id="btn-act4" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition shadow-md">
+                        Check Answers
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity 5 -->
+        <div id="section-5" class="section-container hidden space-y-6">
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold mb-4 border-b pb-2 dark:border-gray-700"><span class="text-blue-500">Activity 5:</span> Image Puzzle</h2>
+                <p class="mb-4 text-lg">Click two pieces to swap them and form the complete image. Timer starts when you click Start.</p>
+                
+                <div class="flex flex-col md:flex-row gap-6 mb-6">
+                    <!-- Target Image -->
+                    <div class="w-full md:w-1/3 flex flex-col items-center">
+                        <h3 class="font-bold mb-2">Target Image</h3>
+                        <img src="Image3.jpg" id="puzzle-target-img" onerror="this.onerror=null; this.src='https://placehold.co/500x400/8b5cf6/ffffff?text=Image+3';" class="w-full rounded-lg shadow-md border-2 border-gray-300 dark:border-gray-600">
+                    </div>
+                    
+                    <!-- Puzzle Area -->
+                    <div class="w-full md:w-2/3 flex flex-col items-center justify-center">
+                        <div class="flex justify-between items-center w-full max-w-[600px] mb-4">
+                            <div class="text-xl font-mono font-bold bg-gray-200 dark:bg-gray-700 px-4 py-2 rounded-lg shiny-blue">
+                                <i class="fas fa-stopwatch mr-2"></i><span id="puzzle-timer">00:00</span>
+                            </div>
+                            <div class="space-x-2">
+                                <button onclick="startPuzzle()" id="btn-puzzle-start" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition shadow-md">
+                                    Start
+                                </button>
+                                <button onclick="resetPuzzle()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition shadow-md">
+                                    Restart
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div id="puzzle-board" class="puzzle-grid opacity-50 pointer-events-none">
+                            <!-- Puzzle pieces generated by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex justify-end">
+                    <button onclick="checkPuzzle()" id="btn-act5" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition shadow-md" disabled>
+                        Check Puzzle
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity 6 -->
+        <div id="section-6" class="section-container hidden space-y-6">
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold mb-4 border-b pb-2 dark:border-gray-700"><span class="text-blue-500">Activity 6:</span> Match the Pictures</h2>
+                <p class="mb-4 text-lg">Match the pictures (a–e) with the information (1–8). Where do you go...</p>
+                
+                <img src="Image4.jpg" onerror="this.onerror=null; this.src='https://placehold.co/1000x300/14b8a6/ffffff?text=Image+4+(a-e)';" class="w-full rounded-xl shadow-md mb-6" alt="Matching Pictures">
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Questions 1-8 -->
+                    <script>
+                        const act6Questions = [
+                            "1 ... if you don’t have much time in London?",
+                            "2 ... to shop and listen to music?",
+                            "3 ... if you don’t have much money to spend?",
+                            "4 ... to be somewhere that always has a lot of people?",
+                            "5 ... to find things that are old or new?",
+                            "6 ... to buy belts or handbags?",
+                            "7 ... to find posters?",
+                            "8 ... if you want something that is handmade?"
+                        ];
+                        act6Questions.forEach((q, i) => {
+                            document.write(`
+                                <div class="flex items-center justify-between bg-gray-100 dark:bg-gray-700 p-3 rounded-lg relative">
+                                    <span class="w-3/4 pr-2">${q}</span>
+                                    <select id="act6-q${i+1}" class="w-1/4 p-2 bg-white dark:bg-gray-800 shiny-blue rounded font-bold text-center">
+                                        <option value="">-</option>
+                                        <option value="a">a</option><option value="b">b</option>
+                                        <option value="c">c</option><option value="d">d</option>
+                                        <option value="e">e</option>
+                                    </select>
+                                    <span id="act6-icon-${i+1}" class="absolute -right-2 top-4"></span>
+                                </div>
+                            `);
+                        });
+                    </script>
+                </div>
+
+                <div class="mt-6 flex justify-end">
+                    <button onclick="checkAct6()" id="btn-act6" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition shadow-md">
+                        Check Answers
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity 7 -->
+        <div id="section-7" class="section-container hidden space-y-6">
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold mb-4 border-b pb-2 dark:border-gray-700"><span class="text-blue-500">Activity 7:</span> Who said what?</h2>
+                <p class="mb-4 text-lg">Listen to the audio, read the accounts, and select Sarah, Mike, or Cynthia.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <!-- Audio 1 -->
+                    <div class="bg-pink-100 dark:bg-pink-900/30 p-4 rounded-xl flex flex-col items-center shadow">
+                        <i class="fas fa-user-circle text-4xl text-pink-500 mb-2"></i>
+                        <h3 class="font-bold text-xl mb-2">Sarah</h3>
+                        <audio controls class="w-full h-10" onerror="handleMediaError(this, 'Audio1')">
+                            <source src="Audio1.mp3" type="audio/mpeg">
+                        </audio>
+                    </div>
+                    <!-- Audio 2 -->
+                    <div class="bg-blue-100 dark:bg-blue-900/30 p-4 rounded-xl flex flex-col items-center shadow">
+                        <i class="fas fa-user-circle text-4xl text-blue-500 mb-2"></i>
+                        <h3 class="font-bold text-xl mb-2">Mike</h3>
+                        <audio controls class="w-full h-10" onerror="handleMediaError(this, 'Audio2')">
+                            <source src="Audio2.mp3" type="audio/mpeg">
+                        </audio>
+                    </div>
+                    <!-- Audio 3 -->
+                    <div class="bg-green-100 dark:bg-green-900/30 p-4 rounded-xl flex flex-col items-center shadow">
+                        <i class="fas fa-user-circle text-4xl text-green-500 mb-2"></i>
+                        <h3 class="font-bold text-xl mb-2">Cynthia</h3>
+                        <audio controls class="w-full h-10" onerror="handleMediaError(this, 'Audio3')">
+                            <source src="Audio3.mp3" type="audio/mpeg">
+                        </audio>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <script>
+                        const act7Questions = [
+                            "1. Who said they bought a present that came with a card about the maker's work?",
+                            "2. Who said they wished they had brought a backpack?",
+                            "3. Who said they used pictures on their phone to explain what they wanted?",
+                            "4. Who said they bought a smaller version of something to stay within their budget?",
+                            "5. Who said they preferred watching a street performance to exploring more shops?",
+                            "6. Who said a shop assistant kept their forgotten shopping bag safe?",
+                            "7. Who said they bought a secondhand comic for their younger brother?",
+                            "8. Who said they decided not to buy a matching jacket?"
+                        ];
+                        act7Questions.forEach((q, i) => {
+                            document.write(`
+                                <div class="flex flex-col md:flex-row items-start md:items-center justify-between bg-gray-100 dark:bg-gray-700 p-3 rounded-lg relative">
+                                    <span class="w-full md:w-3/4 mb-2 md:mb-0 pr-6">${q}</span>
+                                    <select id="act7-q${i+1}" class="w-full md:w-1/4 p-2 bg-white dark:bg-gray-800 shiny-blue rounded font-bold">
+                                        <option value="">Select...</option>
+                                        <option value="Sarah">Sarah</option>
+                                        <option value="Mike">Mike</option>
+                                        <option value="Cynthia">Cynthia</option>
+                                    </select>
+                                    <span id="act7-icon-${i+1}" class="absolute right-2 top-4 md:top-3"></span>
+                                </div>
+                            `);
+                        });
+                    </script>
+                </div>
+
+                <div class="mt-6 flex justify-end">
+                    <button onclick="checkAct7()" id="btn-act7" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition shadow-md">
+                        Check Answers
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity 8 -->
+        <div id="section-8" class="section-container hidden space-y-6">
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold mb-4 border-b pb-2 dark:border-gray-700"><span class="text-blue-500">Activity 8:</span> Sentence Builder</h2>
+                <p class="mb-4 text-lg">Click the words in the word bank to build the complex sentences. Click a word in your sentence to return it to the bank. Click the audio button to hear the final sentence.</p>
+                
+                <div id="sentences-container" class="space-y-8">
+                    <!-- Sentences injected by JS -->
+                </div>
+
+                <div class="mt-6 flex justify-end">
+                    <button onclick="checkAct8()" id="btn-act8" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition shadow-md">
+                        Check Answers
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="section-9" class="section-container hidden space-y-6">
+            <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-xl border-t-8 border-blue-500 text-center relative overflow-hidden">
+                <!-- Decorative background -->
+                <div class="absolute -top-24 -right-24 w-48 h-48 bg-yellow-400 rounded-full mix-blend-multiply filter blur-2xl opacity-30 animate-pulse"></div>
+                <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-blue-400 rounded-full mix-blend-multiply filter blur-2xl opacity-30 animate-pulse"></div>
+
+                <h1 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 mb-2">Final Results</h1>
+                <h2 class="text-2xl font-semibold mb-2" id="res-name-date"></h2>
+                
+                <div class="my-8">
+                    <div class="inline-flex items-center justify-center w-48 h-48 rounded-full border-8 border-gray-100 dark:border-gray-700 relative shadow-inner">
+                        <svg class="absolute inset-0 w-full h-full transform -rotate-90">
+                            <circle cx="90" cy="90" r="80" stroke="currentColor" stroke-width="16" fill="transparent" class="text-gray-200 dark:text-gray-700" />
+                            <circle id="score-circle" cx="90" cy="90" r="80" stroke="currentColor" stroke-width="16" fill="transparent" stroke-dasharray="502" stroke-dashoffset="502" class="text-blue-500 transition-all duration-1000 ease-out" />
+                        </svg>
+                        <div class="text-center absolute">
+                            <span id="final-score-text" class="text-5xl font-black text-gray-800 dark:text-gray-100">0%</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <p id="feedback-text" class="text-xl font-medium mb-8 text-gray-600 dark:text-gray-300"></p>
+
+                <!-- Chart container -->
+                <div class="w-full max-w-2xl mx-auto mb-10 bg-gray-50 dark:bg-gray-700 p-4 rounded-xl shadow-inner border border-gray-200 dark:border-gray-600">
+                    <canvas id="resultsChart"></canvas>
+                </div>
+
+                <!-- Recommendations -->
+                <div class="text-left mt-8 bg-blue-50 dark:bg-gray-800 p-6 rounded-xl border border-blue-200 dark:border-gray-700">
+                    <h3 class="text-2xl font-bold mb-4 text-blue-700 dark:text-blue-400"><i class="fas fa-lightbulb text-yellow-400 mr-2"></i>Mr. Rocha's Recommendations</h3>
+                    <ul id="recommendations-list" class="space-y-3 text-lg">
+                        <!-- Populated by JS -->
+                    </ul>
+                </div>
+                
+                <div class="mt-8 no-print space-x-4">
+                    <button onclick="window.print()" class="bg-gray-800 hover:bg-gray-900 text-white font-bold py-3 px-8 rounded-full transition shadow-lg text-lg">
+                        <i class="fas fa-print mr-2"></i>Print Results
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer Controls -->
+    <footer class="bg-white dark:bg-gray-800 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] p-4 sticky bottom-0 z-50 no-print">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <button id="btn-back" onclick="navigate(-1)" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed">
+                <i class="fas fa-arrow-left mr-2"></i>Back
+            </button>
+            <div id="footer-center">
+                <button id="btn-submit" onclick="generateResults()" class="hidden bg-gradient-to-r from-green-400 to-green-600 hover:from-green-500 hover:to-green-700 text-white font-bold py-3 px-10 rounded-full transition shadow-lg transform hover:scale-105 text-lg">
+                    <i class="fas fa-paper-plane mr-2"></i>Submit Worksheet
+                </button>
+            </div>
+            <button id="btn-next" onclick="navigate(1)" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed">
+                Next<i class="fas fa-arrow-right ml-2"></i>
+            </button>
+        </div>
+    </footer>
+
+    <!-- Logic Script -->
+    <script>
+        // State
+        const TOTAL_SECTIONS = 10; // 0 to 9
+        let currentSection = 0;
+        let isDarkMode = false;
+        
+        let scores = {
+            act1: { score: 0, max: 10, done: false }, // Open ended
+            act2: { score: 0, max: 10, done: false }, // Open ended
+            act3: { score: 0, max: 15, done: false }, // Open ended (3 qs)
+            act4: { score: 0, max: 20, done: false }, // 2 Qs
+            act5: { score: 0, max: 10, done: false }, // Puzzle
+            act6: { score: 0, max: 16, done: false }, // 8 Qs (2 pts each)
+            act7: { score: 0, max: 16, done: false }, // 8 Qs (2 pts each)
+            act8: { score: 0, max: 16, done: false }  // 8 sentences (2 pts each)
+        };
+
+        // Theme Toggle
+        function toggleTheme() {
+            isDarkMode = !isDarkMode;
+            if (isDarkMode) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        }
+
+        // Navigation
+        function updateUI() {
+            // Hide all sections
+            for (let i = 0; i < TOTAL_SECTIONS; i++) {
+                document.getElementById(`section-${i}`).classList.add('hidden');
+                document.getElementById(`section-${i}`).classList.remove('active');
+            }
+            // Show current
+            document.getElementById(`section-${currentSection}`).classList.remove('hidden');
+            document.getElementById(`section-${currentSection}`).classList.add('active');
+            
+            // Progress Bar
+            const progress = (currentSection / (TOTAL_SECTIONS - 1)) * 100;
+            document.getElementById('progress-bar').style.width = `${progress}%`;
+            
+            // Buttons
+            document.getElementById('btn-back').disabled = currentSection === 0;
+            
+            if (currentSection === TOTAL_SECTIONS - 1) { // Results page
+                document.getElementById('btn-next').classList.add('hidden');
+                document.getElementById('btn-submit').classList.add('hidden');
+            } else if (currentSection === TOTAL_SECTIONS - 2) { // Last activity
+                document.getElementById('btn-next').classList.add('hidden');
+                document.getElementById('btn-submit').classList.remove('hidden');
+            } else {
+                document.getElementById('btn-next').classList.remove('hidden');
+                document.getElementById('btn-submit').classList.add('hidden');
+            }
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function navigate(dir) {
+            currentSection += dir;
+            if (currentSection < 0) currentSection = 0;
+            if (currentSection >= TOTAL_SECTIONS) currentSection = TOTAL_SECTIONS - 1;
+            updateUI();
+        }
+
+        function showResultsForce() {
+            currentSection = TOTAL_SECTIONS - 1;
+            updateUI();
+            generateResults();
+        }
+
+        // Utility: Mark Correct/Incorrect
+        function markInput(elId, iconId, isCorrect) {
+            const el = document.getElementById(elId);
+            const icon = document.getElementById(iconId);
+            el.disabled = true;
+            el.classList.remove('shiny-blue');
+            if (isCorrect) {
+                el.classList.add('correct-bg');
+                if(icon) icon.innerHTML = '<i class="fas fa-check-circle text-green-500 text-xl"></i>';
+            } else {
+                el.classList.add('incorrect-bg');
+                if(icon) icon.innerHTML = '<i class="fas fa-times-circle text-red-500 text-xl"></i>';
+            }
+        }
+
+        function handleMediaError(source, name) {
+            const fallbackId = source.id + "-fallback";
+            const fallback = document.getElementById(fallbackId);
+            if(fallback) {
+                fallback.classList.remove('hidden');
+                fallback.innerHTML = `<i class="fas fa-exclamation-triangle text-4xl mb-2 text-yellow-400"></i><span class="text-center p-2">Local file '${name}' not found.<br>Running in placeholder mode.</span>`;
+            }
+        }
+
+        // --- Activity Checkers ---
+
+        function checkOpenEnded(actId) {
+            scores[actId].done = true;
+            
+            const sectionId = actId === 'act1' ? 1 : actId === 'act2' ? 2 : 3;
+            const textareas = document.getElementById(`section-${sectionId}`).querySelectorAll('textarea');
+            
+            let allAnswered = true;
+            let score = 0;
+            let pointsPerQ = scores[actId].max / textareas.length;
+
+            textareas.forEach(ta => {
+                ta.disabled = true;
+                ta.classList.remove('shiny-blue');
+                // Check if the user actually typed a substantial answer (more than 2 characters)
+                if (ta.value.trim().length > 2) {
+                    ta.classList.add('correct-bg');
+                    score += pointsPerQ;
+                } else {
+                    ta.classList.add('incorrect-bg');
+                    allAnswered = false;
+                }
+            });
+
+            scores[actId].score = score;
+
+            const btn = document.getElementById(`btn-${actId}`);
+            btn.disabled = true;
+            
+            if (allAnswered) {
+                btn.innerHTML = '<i class="fas fa-check"></i> Recorded';
+                btn.classList.replace('bg-blue-600', 'bg-green-600');
+            } else {
+                btn.innerHTML = '<i class="fas fa-times"></i> Incomplete';
+                btn.classList.replace('bg-blue-600', 'bg-red-500');
+            }
+        }
+
+        function checkAct4() {
+            scores.act4.done = true;
+            let score = 0;
+            
+            // Q1
+            const q1 = document.getElementById('act4-q1').value.toLowerCase();
+            const q1Correct = q1.includes('7') || q1.includes('8') || q1.includes('seven') || q1.includes('eight');
+            markInput('act4-q1', 'act4-q1-icon', q1Correct);
+            if (q1Correct) score += 10;
+
+            // Q2
+            const q2 = document.getElementById('act4-q2').value.toLowerCase();
+            const keywords = ['oxford', 'knightsbridge', 'covent garden', 'spitalfields', 'portobello', "king's cross", "kings cross", 'liverpool', 'airport'];
+            let matches = 0;
+            keywords.forEach(k => { if (q2.includes(k)) matches++; });
+            const q2Correct = matches >= 2;
+            markInput('act4-q2', 'act4-q2-icon', q2Correct);
+            if (q2Correct) score += 10;
+
+            scores.act4.score = score;
+            const btn = document.getElementById('btn-act4');
+            btn.disabled = true;
+            btn.innerHTML = 'Checked';
+            btn.classList.replace('bg-blue-600', 'bg-gray-500');
+        }
+
+        // --- Activity 5: Puzzle ---
+        let puzzleTimerInterval;
+        let puzzleSeconds = 0;
+        let puzzlePieces = [];
+        let puzzleStarted = false;
+
+        function initPuzzle() {
+            const board = document.getElementById('puzzle-board');
+            board.innerHTML = '';
+            puzzlePieces = [];
+            
+            // 5 cols, 4 rows = 20 pieces
+            // Create target correct order array
+            for(let i=0; i<20; i++) {
+                puzzlePieces.push(i);
+            }
+            
+            // Shuffle
+            puzzlePieces.sort(() => Math.random() - 0.5);
+
+            puzzlePieces.forEach((val, index) => {
+                const piece = document.createElement('div');
+                piece.className = 'puzzle-piece';
+                piece.dataset.currentPos = index;
+                piece.dataset.correctPos = val;
+                
+                // Calculate background position based on correct value
+                const row = Math.floor(val / 5);
+                const col = val % 5;
+                
+                const bgX = (col / 4) * 100;
+                const bgY = (row / 3) * 100;
+                
+                // Try fetching image from target. If fail, use CSS fallback
+                const imgSrc = document.getElementById('puzzle-target-img').src;
+                piece.style.backgroundImage = `url('${imgSrc}')`;
+                piece.style.backgroundPosition = `${bgX}% ${bgY}%`;
+                
+                piece.onclick = () => handlePuzzleClick(piece);
+                board.appendChild(piece);
+            });
+        }
+
+        let selectedPiece = null;
+        function handlePuzzleClick(piece) {
+            if (!puzzleStarted) return;
+            if (scores.act5.done) return;
+
+            if (!selectedPiece) {
+                selectedPiece = piece;
+                piece.classList.add('selected');
+            } else {
+                if (selectedPiece !== piece) {
+                    // Swap logic
+                    const p1 = selectedPiece;
+                    const p2 = piece;
+                    
+                    const parent = p1.parentNode;
+                    const p1Next = p1.nextSibling === p2 ? p1 : p1.nextSibling;
+                    const p2Next = p2.nextSibling === p1 ? p2 : p2.nextSibling;
+                    
+                    parent.insertBefore(p1, p2Next);
+                    parent.insertBefore(p2, p1Next);
+                }
+                selectedPiece.classList.remove('selected');
+                selectedPiece = null;
+                checkPuzzleCompletion();
+            }
+        }
+
+        function startPuzzle() {
+            if (puzzleStarted) return;
+            initPuzzle();
+            puzzleStarted = true;
+            document.getElementById('puzzle-board').classList.remove('opacity-50', 'pointer-events-none');
+            document.getElementById('btn-puzzle-start').disabled = true;
+            document.getElementById('btn-puzzle-start').classList.replace('bg-green-600', 'bg-gray-500');
+            document.getElementById('btn-act5').disabled = false;
+            
+            puzzleTimerInterval = setInterval(() => {
+                puzzleSeconds++;
+                const m = String(Math.floor(puzzleSeconds / 60)).padStart(2, '0');
+                const s = String(puzzleSeconds % 60).padStart(2, '0');
+                document.getElementById('puzzle-timer').innerText = `${m}:${s}`;
+            }, 1000);
+        }
+
+        function resetPuzzle() {
+            clearInterval(puzzleTimerInterval);
+            puzzleSeconds = 0;
+            document.getElementById('puzzle-timer').innerText = `00:00`;
+            puzzleStarted = false;
+            document.getElementById('btn-puzzle-start').disabled = false;
+            document.getElementById('btn-puzzle-start').classList.replace('bg-gray-500', 'bg-green-600');
+            document.getElementById('btn-act5').disabled = true;
+            document.getElementById('puzzle-board').classList.add('opacity-50', 'pointer-events-none');
+            
+            const btn = document.getElementById('btn-act5');
+            btn.innerHTML = 'Check Puzzle';
+            btn.classList.replace('bg-gray-500', 'bg-blue-600');
+            scores.act5.done = false;
+            scores.act5.score = 0;
+
+            initPuzzle(); // Show scrambled state
+        }
+
+        function checkPuzzleCompletion() {
+            const pieces = document.getElementById('puzzle-board').children;
+            let correctCount = 0;
+            for(let i=0; i<pieces.length; i++) {
+                if (parseInt(pieces[i].dataset.correctPos) === i) {
+                    correctCount++;
+                }
+            }
+            return correctCount === 20;
+        }
+
+        function checkPuzzle() {
+            clearInterval(puzzleTimerInterval);
+            scores.act5.done = true;
+            
+            const pieces = document.getElementById('puzzle-board').children;
+            let correctCount = 0;
+            for(let i=0; i<pieces.length; i++) {
+                if (parseInt(pieces[i].dataset.correctPos) === i) {
+                    correctCount++;
+                }
+            }
+            
+            scores.act5.score = (correctCount / 20) * 10;
+            
+            document.getElementById('puzzle-board').classList.add('pointer-events-none');
+            const btn = document.getElementById('btn-act5');
+            btn.disabled = true;
+            btn.innerHTML = `Score: ${scores.act5.score.toFixed(1)}/10`;
+            btn.classList.replace('bg-blue-600', 'bg-gray-500');
+        }
+
+
+        // --- Activity 6 Checker ---
+        const act6Ans = ['e', 'd', 'c', 'a', 'c', 'b', 'c', 'b'];
+        function checkAct6() {
+            scores.act6.done = true;
+            let score = 0;
+            for (let i = 0; i < 8; i++) {
+                const sel = document.getElementById(`act6-q${i+1}`);
+                const val = sel.value.toLowerCase();
+                const isCorrect = val === act6Ans[i];
+                markInput(`act6-q${i+1}`, `act6-icon-${i+1}`, isCorrect);
+                if (isCorrect) score += 2;
+                else {
+                    // Show correct answer visually
+                    const label = document.createElement('span');
+                    label.className = "text-xs font-bold text-red-500 absolute -bottom-4 right-0";
+                    label.innerText = `Ans: ${act6Ans[i]}`;
+                    sel.parentNode.appendChild(label);
+                }
+            }
+            scores.act6.score = score;
+            const btn = document.getElementById('btn-act6');
+            btn.disabled = true;
+            btn.innerHTML = 'Checked';
+            btn.classList.replace('bg-blue-600', 'bg-gray-500');
+        }
+
+        // --- Activity 7 Checker ---
+        const act7Ans = ['Cynthia', 'Mike', 'Sarah', 'Mike', 'Cynthia', 'Sarah', 'Mike', 'Sarah'];
+        function checkAct7() {
+            scores.act7.done = true;
+            let score = 0;
+            for (let i = 0; i < 8; i++) {
+                const sel = document.getElementById(`act7-q${i+1}`);
+                const val = sel.value;
+                const isCorrect = val === act7Ans[i];
+                markInput(`act7-q${i+1}`, `act7-icon-${i+1}`, isCorrect);
+                if (isCorrect) score += 2;
+                else {
+                     const label = document.createElement('span');
+                    label.className = "text-xs font-bold text-red-500 absolute -bottom-4 right-0 md:bottom-auto md:right-32";
+                    label.innerText = `Ans: ${act7Ans[i]}`;
+                    sel.parentNode.appendChild(label);
+                }
+            }
+            scores.act7.score = score;
+            const btn = document.getElementById('btn-act7');
+            btn.disabled = true;
+            btn.innerHTML = 'Checked';
+            btn.classList.replace('bg-blue-600', 'bg-gray-500');
+        }
+
+        // --- Activity 8: Sentences ---
+        const act8Sentences = [
+            "London offers an incredible variety of shopping experiences from bustling street markets to luxurious department stores.",
+            "If you are looking for vintage clothing you should definitely spend an afternoon exploring the stalls at Portobello Road.",
+            "Many tourists flock to Oxford Street to visit the flagship stores of popular high-street fashion brands.",
+            "Covent Garden is not only famous for its boutique shops but also for its entertaining street performances.",
+            "It is advisable to compare prices and check for discounts before making a major purchase in a boutique.",
+            "Although Knightsbridge is known for luxury you can still find reasonably priced souvenirs if you look carefully.",
+            "The independent designers in East London often sell unique handmade crafts that you will not find elsewhere.",
+            "Taking the tube is the most efficient way to navigate between different shopping districts during the weekend sales."
+        ];
+
+        let builderState = [];
+
+        function initAct8() {
+            const container = document.getElementById('sentences-container');
+            container.innerHTML = '';
+            builderState = [];
+
+            act8Sentences.forEach((sentence, index) => {
+                const words = sentence.split(' ').map(w => w.trim()).filter(w => w);
+                const shuffled = [...words].sort(() => Math.random() - 0.5);
+                
+                builderState.push({ original: words, current: [] });
+
+                const wrap = document.createElement('div');
+                wrap.className = 'bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg shadow-sm';
+                
+                const header = document.createElement('div');
+                header.className = 'flex justify-between items-center mb-2';
+                header.innerHTML = `<h3 class="font-bold text-lg">Sentence ${index + 1}</h3>
+                                    <button onclick="playAudio('${sentence.replace(/'/g, "\\'")}')" class="text-blue-500 hover:text-blue-700 text-xl"><i class="fas fa-volume-up"></i></button>`;
+                
+                const bank = document.createElement('div');
+                bank.id = `bank-${index}`;
+                bank.className = 'min-h-[3rem] mb-2 flex flex-wrap gap-2';
+                
+                shuffled.forEach((w, wIdx) => {
+                    const tile = document.createElement('div');
+                    tile.className = 'word-tile';
+                    tile.innerText = w;
+                    tile.dataset.word = w;
+                    tile.onclick = () => moveWord(tile, index, 'down');
+                    bank.appendChild(tile);
+                });
+
+                const dropZone = document.createElement('div');
+                dropZone.id = `drop-${index}`;
+                dropZone.className = 'sentence-drop-zone shiny-blue';
+                
+                wrap.appendChild(header);
+                wrap.appendChild(bank);
+                wrap.appendChild(dropZone);
+                container.appendChild(wrap);
+            });
+        }
+
+        function moveWord(tile, sIndex, dir) {
+            if (scores.act8.done) return;
+            const bank = document.getElementById(`bank-${sIndex}`);
+            const drop = document.getElementById(`drop-${sIndex}`);
+            
+            if (dir === 'down') {
+                drop.appendChild(tile);
+                tile.onclick = () => moveWord(tile, sIndex, 'up');
+            } else {
+                bank.appendChild(tile);
+                tile.onclick = () => moveWord(tile, sIndex, 'down');
+            }
+        }
+
+        function playAudio(text) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'en-GB';
+                utterance.rate = 0.9;
+                speechSynthesis.speak(utterance);
+            } else {
+                alert("Text-to-speech not supported in this browser.");
+            }
+        }
+
+        function checkAct8() {
+            scores.act8.done = true;
+            let score = 0;
+            
+            act8Sentences.forEach((sentence, index) => {
+                const dropZone = document.getElementById(`drop-${index}`);
+                const tiles = dropZone.children;
+                let userSentence = [];
+                for(let i=0; i<tiles.length; i++) {
+                    userSentence.push(tiles[i].dataset.word);
+                }
+                const userText = userSentence.join(' ');
+                
+                dropZone.classList.remove('shiny-blue');
+                if (userText === sentence) {
+                    dropZone.classList.add('correct-bg');
+                    score += 2;
+                } else {
+                    dropZone.classList.add('incorrect-bg');
+                    // Show correct answer below
+                    const correctP = document.createElement('p');
+                    correctP.className = 'text-green-600 dark:text-green-400 mt-2 font-semibold text-sm';
+                    correctP.innerHTML = `Correct: ${sentence}`;
+                    dropZone.parentNode.appendChild(correctP);
+                }
+                
+                // Disable tiles
+                const allTiles = document.getElementById(`bank-${index}`).parentNode.querySelectorAll('.word-tile');
+                allTiles.forEach(t => { t.style.cursor = 'default'; t.onclick = null; t.classList.add('opacity-80'); });
+            });
+
+            scores.act8.score = score;
+            const btn = document.getElementById('btn-act8');
+            btn.disabled = true;
+            btn.innerHTML = 'Checked';
+            btn.classList.replace('bg-blue-600', 'bg-gray-500');
+        }
+
+        // --- Results Generation ---
+        let resultsChartInstance = null;
+
+        function generateResults() {
+            // Force finish anything not done
+            if(!scores.act1.done) checkOpenEnded('act1');
+            if(!scores.act2.done) checkOpenEnded('act2');
+            if(!scores.act3.done) checkOpenEnded('act3');
+            if(!scores.act4.done) checkAct4();
+            if(!scores.act5.done) checkPuzzle();
+            if(!scores.act6.done) checkAct6();
+            if(!scores.act7.done) checkAct7();
+            if(!scores.act8.done) checkAct8();
+
+            const name = document.getElementById('student-name').value || "Student";
+            const date = document.getElementById('student-date').value || new Date().toLocaleDateString();
+            document.getElementById('res-name-date').innerText = `${name} | ${date}`;
+
+            let totalScore = 0;
+            let totalMax = 0;
+            const sectionScores = [];
+            const labels = [];
+
+            for (const [key, val] of Object.entries(scores)) {
+                totalScore += val.score;
+                totalMax += val.max;
+                sectionScores.push(Math.round((val.score / val.max) * 100));
+                labels.push(key.toUpperCase());
+            }
+
+            const percent = Math.round((totalScore / totalMax) * 100);
+            
+            // Animate Circle
+            const circle = document.getElementById('score-circle');
+            const offset = 502 - (502 * percent) / 100;
+            
+            // Small delay to allow DOM render before animation
+            setTimeout(() => {
+                circle.style.strokeDashoffset = offset;
+                // Color based on score
+                if(percent >= 80) circle.classList.replace('text-blue-500', 'text-green-500');
+                else if(percent >= 60) circle.classList.replace('text-blue-500', 'text-yellow-500');
+                else circle.classList.replace('text-blue-500', 'text-red-500');
+            }, 100);
+
+            // Animate number
+            let curr = 0;
+            const textEl = document.getElementById('final-score-text');
+            const interval = setInterval(() => {
+                if(curr >= percent) {
+                    clearInterval(interval);
+                    textEl.innerText = `${percent}%`;
+                } else {
+                    curr++;
+                    textEl.innerText = `${curr}%`;
+                }
+            }, 15);
+
+            // Feedback logic
+            const fbText = document.getElementById('feedback-text');
+            if (percent >= 90) fbText.innerHTML = `Excellent work, <b>${name}</b>! You have a great mastery of this topic.`;
+            else if (percent >= 70) fbText.innerHTML = `Good job, <b>${name}</b>. You understood most of the material well.`;
+            else if (percent >= 50) fbText.innerHTML = `Keep practicing, <b>${name}</b>. There is room for improvement.`;
+            else fbText.innerHTML = `Please review the material again, <b>${name}</b>. Ask Mr. Rocha for help if needed.`;
+
+            // Render Chart
+            const ctx = document.getElementById('resultsChart').getContext('2d');
+            if (resultsChartInstance) resultsChartInstance.destroy();
+            
+            resultsChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Video 1', 'Reading', 'Questions', 'Video 2', 'Puzzle', 'Matching', 'Listening', 'Sentences'],
+                    datasets: [{
+                        label: 'Score Percentage (%)',
+                        data: sectionScores,
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.7)',
+                            'rgba(54, 162, 235, 0.7)',
+                            'rgba(255, 206, 86, 0.7)',
+                            'rgba(75, 192, 192, 0.7)',
+                            'rgba(153, 102, 255, 0.7)',
+                            'rgba(255, 159, 64, 0.7)',
+                            'rgba(199, 199, 199, 0.7)',
+                            'rgba(83, 102, 255, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(255, 159, 64, 1)',
+                            'rgba(199, 199, 199, 1)',
+                            'rgba(83, 102, 255, 1)'
+                        ],
+                        borderWidth: 2,
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: { y: { beginAtZero: true, max: 100 } },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // Generate 8 Recommendations based on weakest areas
+            const recommendations = [
+                { act: 'act1', text: "Watch videos carefully. Try taking notes of main ideas while watching (Activity 1)." },
+                { act: 'act2', text: "Improve reading comprehension by summarizing paragraphs in your own words (Activity 2)." },
+                { act: 'act3', text: "Practice formulating clear, complete sentences when answering open questions (Activity 3)." },
+                { act: 'act4', text: "Work on listening for specific details, like names of places and numbers (Activity 4)." },
+                { act: 'act5', text: "Visual memory tasks can help focus. Keep practicing to build concentration (Activity 5)." },
+                { act: 'act6', text: "Review vocabulary related to shops and items. Flashcards can be very helpful here (Activity 6)." },
+                { act: 'act7', text: "Practice audio discrimination by listening to different English accents and noting key details (Activity 7)." },
+                { act: 'act8', text: "Review B2 level grammar, specifically complex sentence structure and conjunctions (Activity 8)." }
+            ];
+
+            // Sort scores to find weakest
+            const sortedActs = Object.keys(scores).map(key => ({
+                key,
+                pct: scores[key].score / scores[key].max
+            })).sort((a,b) => a.pct - b.pct);
+
+            const recList = document.getElementById('recommendations-list');
+            recList.innerHTML = '';
+            
+            // We need exactly 8 recommendations as per prompt. 
+            // We will just print all 8, but highlight/reorder them based on score.
+            sortedActs.forEach((item, index) => {
+                const rec = recommendations.find(r => r.act === item.key);
+                const li = document.createElement('li');
+                li.className = 'flex items-start';
+                
+                let iconColor = 'text-green-500';
+                let iconType = 'fa-check-circle';
+                
+                if (item.pct < 0.6) {
+                    iconColor = 'text-red-500';
+                    iconType = 'fa-exclamation-circle';
+                    li.classList.add('font-semibold');
+                } else if (item.pct < 0.8) {
+                    iconColor = 'text-yellow-500';
+                    iconType = 'fa-info-circle';
+                }
+
+                li.innerHTML = `<i class="fas ${iconType} ${iconColor} mt-1 mr-3 text-xl"></i><span>${rec.text} (Score: ${Math.round(item.pct*100)}%)</span>`;
+                recList.appendChild(li);
+            });
+
+            // Navigate to results
+            currentSection = TOTAL_SECTIONS - 1;
+            updateUI();
+        }
+
+        // Init
+        window.onload = () => {
+            // Set date to today
+            document.getElementById('student-date').valueAsDate = new Date();
+            initPuzzle();
+            initAct8();
+            updateUI();
+        };
+    </script>
+</body>
+</html>
